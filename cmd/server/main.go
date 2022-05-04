@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/yuchida-tamu/git-workout-api/internal/db"
+	transportHttp "github.com/yuchida-tamu/git-workout-api/internal/transport/http"
+	"github.com/yuchida-tamu/git-workout-api/internal/user"
 )
 
 func Run() error {
@@ -18,6 +20,14 @@ func Run() error {
 	if err := db.MigrateDB(); err != nil {
 		fmt.Println("failed to migrate database")
 		return err
+	}
+
+	userService := user.NewService(db)
+	service := transportHttp.Service{User: userService}
+
+	httpHandler := transportHttp.NewHandler(service)
+	if err := httpHandler.Serve(); err != nil {
+		return nil
 	}
 
 	return nil
