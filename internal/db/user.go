@@ -14,12 +14,14 @@ type UserService interface {
 type UserRow struct {
 	ID       string
 	Username string
+	Password string
 }
 
 func convertUserRowToUser(row UserRow) appUser.User {
 	return appUser.User{
 		ID:       row.ID,
 		Username: row.Username,
+		Password: row.Password,
 	}
 }
 
@@ -36,14 +38,14 @@ func (d *Database) GetUsers(ctx context.Context) ([]appUser.User, error) {
 	}
 
 	for rows.Next() {
-		var ID, Username string
+		var ID, Username, Password string
 
-		err := rows.Scan(&ID, &Username)
+		err := rows.Scan(&ID, &Username, &Password)
 		if err != nil {
 			return []appUser.User{}, fmt.Errorf("error fetching the user: %w", err)
 		}
 
-		users = append(users, convertUserRowToUser(UserRow{ID: ID, Username: Username}))
+		users = append(users, convertUserRowToUser(UserRow{ID: ID, Username: Username, Password: Password}))
 
 	}
 
@@ -58,7 +60,7 @@ func (d *Database) GetUser(ctx context.Context, uuid string) (appUser.User, erro
 		`SELECT * FROM users WHERE id = $1`,
 		uuid,
 	)
-	err := row.Scan(&userRow.ID, &userRow.Username)
+	err := row.Scan(&userRow.ID, &userRow.Username, &userRow.Password)
 	if err != nil {
 		return appUser.User{}, fmt.Errorf("error fetching the user by uuid: %w", err)
 	}
@@ -72,14 +74,15 @@ func (d *Database) PostUser(ctx context.Context, user appUser.User) (appUser.Use
 	postRow := UserRow{
 		ID:       user.ID,
 		Username: user.Username,
+		Password: user.Password,
 	}
 
 	row, err := d.Client.NamedQueryContext(
 		ctx,
 		`INSERT INTO users
-		(id, username)
+		(id, username, password)
 		VALUES
-		(:id, :username)`,
+		(:id, :username, :password)`,
 		postRow,
 	)
 
@@ -98,12 +101,14 @@ func (d *Database) UpdateUser(ctx context.Context, uuid string, user appUser.Use
 	userRow := UserRow{
 		ID:       uuid,
 		Username: user.Username,
+		Password: user.Password,
 	}
 
 	row, err := d.Client.NamedQueryContext(
 		ctx,
 		`UPDATE users SET
-		username = :username
+		username = :username,
+		password = : password
 		WHERE id = :id`,
 		userRow,
 	)
