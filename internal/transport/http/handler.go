@@ -29,6 +29,11 @@ func NewHandler(service Service) *Handler {
 	h.Router = mux.NewRouter()
 	h.mapRoutes()
 
+	// use middlewares
+	h.Router.Use(JSONMiddleware)
+	h.Router.Use(LoggingMiddleware)
+	h.Router.Use(TimeoutMiddleware)
+
 	h.Server = &http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: h.Router,

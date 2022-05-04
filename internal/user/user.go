@@ -30,7 +30,7 @@ func NewService(store Store) *Service {
 }
 
 func (s *Service) GetUsers(ctx context.Context) ([]User, error) {
-	users, err := s.GetUsers(ctx)
+	users, err := s.Store.GetUsers(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return []User{}, err
@@ -39,7 +39,7 @@ func (s *Service) GetUsers(ctx context.Context) ([]User, error) {
 }
 
 func (s *Service) GetUser(ctx context.Context, ID string) (User, error) {
-	user, err := s.GetUser(ctx, ID)
+	user, err := s.Store.GetUser(ctx, ID)
 	if err != nil {
 		fmt.Println(err)
 		return User{}, err
@@ -49,7 +49,7 @@ func (s *Service) GetUser(ctx context.Context, ID string) (User, error) {
 }
 
 func (s *Service) PostUser(ctx context.Context, user User) (User, error) {
-	user, err := s.PostUser(ctx, user)
+	user, err := s.Store.PostUser(ctx, user)
 	if err != nil {
 		fmt.Println(err)
 		return User{}, err
@@ -59,7 +59,7 @@ func (s *Service) PostUser(ctx context.Context, user User) (User, error) {
 }
 
 func (s *Service) UpdateUser(ctx context.Context, ID string, user User) (User, error) {
-	user, err := s.UpdateUser(ctx, ID, user)
+	user, err := s.Store.UpdateUser(ctx, ID, user)
 	if err != nil {
 		fmt.Println(err)
 		return User{}, err
@@ -69,7 +69,7 @@ func (s *Service) UpdateUser(ctx context.Context, ID string, user User) (User, e
 }
 
 func (s *Service) DeleteUser(ctx context.Context, ID string) error {
-	err := s.DeleteUser(ctx, ID)
+	err := s.Store.DeleteUser(ctx, ID)
 	if err != nil {
 		fmt.Println(err)
 		return err
