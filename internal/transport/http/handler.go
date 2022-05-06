@@ -33,6 +33,8 @@ func NewHandler(service Service) *Handler {
 	h.Router.Use(JSONMiddleware)
 	h.Router.Use(LoggingMiddleware)
 	h.Router.Use(TimeoutMiddleware)
+	// auth middleware
+	h.Router.Use(JWTAuthMiddleware)
 
 	h.Server = &http.Server{
 		Addr:    "0.0.0.0:8080",
