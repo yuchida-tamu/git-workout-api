@@ -10,7 +10,7 @@
 
 ### Record
 
-- [ ] Record Service layer
+- [x] Record Service layer
 - [ ] Record Data layer
 - [ ] Record Transport Layer
 
