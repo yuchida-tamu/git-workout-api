@@ -16,6 +16,7 @@ type UserService interface {
 	PostUser(context.Context, user.User) (user.User, error)
 	UpdateUser(ctx context.Context, ID string, user user.User) (user.User, error)
 	DeleteUser(ctx context.Context, ID string) error
+	AuthUser(ctx context.Context, username string, password string) (user.User, error)
 }
 
 type Response struct {
@@ -25,6 +26,21 @@ type Response struct {
 type PostUserRequest struct {
 	Username string
 	Password string
+}
+
+type AuthData struct {
+	Username string
+	Password string
+}
+
+type AuthUserForClient struct {
+	ID       string
+	Username string
+}
+
+type AuthUserResponse struct {
+	IsAuthed bool
+	Data     AuthUserForClient
 }
 
 func convertPostUserRequestToUser(u PostUserRequest) user.User {
@@ -131,4 +147,49 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(Response{message: "Successfully deleted"}); err != nil {
 		panic(err)
 	}
+}
+
+func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
+	var authData AuthData
+	if err := json.NewDecoder(r.Body).Decode(&authData); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	validate := validator.New()
+	err := validate.Struct(authData)
+
+	if err != nil {
+		http.Error(w, "not a valid input", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.Service.User.AuthUser(r.Context(), authData.Username, authData.Password)
+
+	if err != nil {
+		response := AuthUserResponse{
+			IsAuthed: false,
+			Data:     AuthUserForClient{},
+		}
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	authUserForClient := AuthUserForClient{
+		ID:       user.ID,
+		Username: user.Username,
+	}
+
+	response := AuthUserResponse{
+		IsAuthed: true,
+		Data:     authUserForClient,
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		panic(err)
+	}
+
 }

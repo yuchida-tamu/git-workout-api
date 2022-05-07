@@ -53,6 +53,7 @@ func (h *Handler) mapRoutes() {
 	h.Router.HandleFunc("/api/v1/user/{id}", h.GetUser).Methods("GET")
 	h.Router.HandleFunc("/api/v1/user/{id}", h.UpdateUser).Methods("UPDATE")
 	h.Router.HandleFunc("/api/v1/user/{id}", h.DeleteUser).Methods("DELETE")
+	h.Router.HandleFunc("/api/v1/user/authUser", h.AuthUser).Methods("POST")
 }
 
 func (h *Handler) Serve() error {

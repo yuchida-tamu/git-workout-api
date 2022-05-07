@@ -74,6 +74,23 @@ func (d *Database) GetUser(ctx context.Context, uuid string) (appUser.User, erro
 	return convertUserRowToUser(userRow), nil
 }
 
+func (d *Database) GetUserByUsername(ctx context.Context, username string) (appUser.User, error) {
+	var userRow UserRow
+
+	row := d.Client.QueryRowContext(
+		ctx,
+		`SELECT * FROM users WHERE username = $1`,
+		username,
+	)
+
+	err := row.Scan(&userRow.ID, &userRow.Username, &userRow.Password)
+	if err != nil {
+		return appUser.User{}, fmt.Errorf("error fetching the user by username: %w", err)
+	}
+
+	return convertUserRowToUser(userRow), nil
+}
+
 func (d *Database) PostUser(ctx context.Context, user appUser.User) (appUser.User, error) {
 	user.ID = uuid.NewV4().String()
 	hash, err := hashPassword(user.Password)

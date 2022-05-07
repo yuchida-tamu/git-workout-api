@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 	"fmt"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -17,10 +19,16 @@ type Store interface {
 	PostUser(context.Context, User) (User, error)
 	UpdateUser(context.Context, string, User) (User, error)
 	DeleteUser(context.Context, string) error
+	GetUserByUsername(context.Context, string) (User, error)
 }
 
 type Service struct {
 	Store Store
+}
+
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func NewService(store Store) *Service {
@@ -76,4 +84,18 @@ func (s *Service) DeleteUser(ctx context.Context, ID string) error {
 	}
 
 	return nil
+}
+
+func (s *Service) AuthUser(ctx context.Context, username string, password string) (User, error) {
+	user, err := s.Store.GetUserByUsername(ctx, username)
+	if err != nil {
+		fmt.Println(err)
+		return User{}, err
+	}
+
+	if !checkPasswordHash(password, user.Password) {
+		return User{}, fmt.Errorf("Failed to authenticate the user")
+	}
+
+	return user, nil
 }
