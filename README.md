@@ -14,6 +14,9 @@
 - [ ] Record Data layer
 - [ ] Record Transport Layer
 
+- [ ] API: getAllRecords
+- [ ] API: getRecordById
+
 ### Deploy
 
 - [ ] Deploy to Heroku
