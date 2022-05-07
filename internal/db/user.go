@@ -155,6 +155,7 @@ func (d *Database) DeleteUser(ctx context.Context, uuid string) error {
 	_, err := d.Client.ExecContext(
 		ctx,
 		`DELETE FROM users WHERE id = $1`,
+		uuid,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to delete user from database: %w", err)

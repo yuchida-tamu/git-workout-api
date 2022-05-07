@@ -8,12 +8,12 @@ import (
 type Record struct {
 	ID          string
 	DateCreated string
-	Message     string
-	UserId      string
+	MessageBody string
+	Author      string
 }
 
 type Store interface {
-	GetRecordsByUserId(context.Context, string) ([]Record, error)
+	GetRecordsByAuthor(context.Context, string) ([]Record, error)
 	GetRecordById(context.Context, string) (Record, error)
 	PostRecord(context.Context, Record) (Record, error)
 	UpdateRecord(ctx context.Context, ID string, rcd Record) (Record, error)
@@ -30,8 +30,8 @@ func NewService(store Store) *Service {
 	}
 }
 
-func (s *Service) GetRecordsByUserId(ctx context.Context, ID string) ([]Record, error) {
-	rcd, err := s.Store.GetRecordsByUserId(ctx, ID)
+func (s *Service) GetRecordsByAuthor(ctx context.Context, ID string) ([]Record, error) {
+	rcd, err := s.Store.GetRecordsByAuthor(ctx, ID)
 	if err != nil {
 		fmt.Println(err)
 		return []Record{}, err
