@@ -2,7 +2,7 @@
 
 ### Config
 
-- [ ] move env vars to .env
+- [x] move env vars to .env
 
 ### Auth
 
