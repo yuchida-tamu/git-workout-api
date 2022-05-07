@@ -11,14 +11,6 @@ import (
 	"github.com/yuchida-tamu/git-workout-api/internal/user"
 )
 
-type UserService interface {
-	GetUser(ctx context.Context, ID string) (user.User, error)
-	PostUser(context.Context, user.User) (user.User, error)
-	UpdateUser(ctx context.Context, ID string, user user.User) (user.User, error)
-	DeleteUser(ctx context.Context, ID string) error
-	AuthUser(ctx context.Context, username string, password string) (user.User, error)
-}
-
 type Response struct {
 	message string
 }
@@ -33,15 +25,25 @@ type AuthData struct {
 	Password string
 }
 
-type AuthUserForClient struct {
+type UserForClient struct {
 	ID       string
 	Username string
 }
 
 type AuthUserResponse struct {
 	IsAuthed bool
-	Data     AuthUserForClient
+	Data     UserForClient
 }
+
+type UserService interface {
+	GetUser(ctx context.Context, ID string) (user.User, error)
+	PostUser(context.Context, user.User) (user.User, error)
+	UpdateUser(ctx context.Context, ID string, user user.User) (user.User, error)
+	DeleteUser(ctx context.Context, ID string) error
+	AuthUser(ctx context.Context, username string, password string) (user.User, error)
+}
+
+// TODO: remove password from reponse
 
 func convertPostUserRequestToUser(u PostUserRequest) user.User {
 	return user.User{
@@ -71,7 +73,12 @@ func (h *Handler) PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(postedUser); err != nil {
+	userForClient := UserForClient{
+		ID:       postedUser.ID,
+		Username: postedUser.Username,
+	}
+
+	if err := json.NewEncoder(w).Encode(userForClient); err != nil {
 		panic(err)
 	}
 
@@ -92,7 +99,12 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(user); err != nil {
+	userForClient := UserForClient{
+		ID:       user.ID,
+		Username: user.Username,
+	}
+
+	if err := json.NewEncoder(w).Encode(userForClient); err != nil {
 		panic(err)
 	}
 }
@@ -124,7 +136,12 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(user); err != nil {
+	userForClient := UserForClient{
+		ID:       user.ID,
+		Username: user.Username,
+	}
+
+	if err := json.NewEncoder(w).Encode(userForClient); err != nil {
 		panic(err)
 	}
 }
@@ -169,7 +186,7 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := AuthUserResponse{
 			IsAuthed: false,
-			Data:     AuthUserForClient{},
+			Data:     UserForClient{},
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -178,14 +195,14 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authUserForClient := AuthUserForClient{
+	UserForClient := UserForClient{
 		ID:       user.ID,
 		Username: user.Username,
 	}
 
 	response := AuthUserResponse{
 		IsAuthed: true,
-		Data:     authUserForClient,
+		Data:     UserForClient,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
