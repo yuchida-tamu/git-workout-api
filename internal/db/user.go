@@ -6,6 +6,7 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 	appUser "github.com/yuchida-tamu/git-workout-api/internal/user"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
@@ -23,6 +24,11 @@ func convertUserRowToUser(row UserRow) appUser.User {
 		Username: row.Username,
 		Password: row.Password,
 	}
+}
+
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
 func (d *Database) GetUsers(ctx context.Context) ([]appUser.User, error) {
@@ -70,6 +76,11 @@ func (d *Database) GetUser(ctx context.Context, uuid string) (appUser.User, erro
 
 func (d *Database) PostUser(ctx context.Context, user appUser.User) (appUser.User, error) {
 	user.ID = uuid.NewV4().String()
+	hash, err := hashPassword(user.Password)
+	if err != nil {
+		return appUser.User{}, err
+	}
+	user.Password = hash
 
 	postRow := UserRow{
 		ID:       user.ID,
