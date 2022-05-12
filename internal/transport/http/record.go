@@ -12,9 +12,9 @@ import (
 )
 
 type PostRecordRequest struct {
-	DateCreated string
-	MessageBody string
-	Author      string
+	DateCreated string `json:"date_created" validate:"required"`
+	MessageBody string `json:"message_body" validate:"required"`
+	Author      string `json:"author" validate:"required"`
 }
 
 func convertPostRecordRequestToRecord(r PostRecordRequest) record.Record {
