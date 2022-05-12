@@ -11,11 +11,12 @@
 ### Record
 
 - [x] Record Service layer
-- [ ] Record Data layer
-- [ ] Record Transport Layer
+- [x] Record Data layer
+- [x] Record Transport Layer
 
-- [ ] API: getAllRecords
-- [ ] API: getRecordById
+- [x] API: getAllRecords
+- [x] API: getRecordById
+- [ ] validation: validate author is valid ID
 
 ### Deploy
 
