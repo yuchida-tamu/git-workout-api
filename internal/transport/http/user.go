@@ -11,10 +11,6 @@ import (
 	"github.com/yuchida-tamu/git-workout-api/internal/user"
 )
 
-type Response struct {
-	message string
-}
-
 type PostUserRequest struct {
 	Username string
 	Password string

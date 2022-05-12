@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +12,8 @@ import (
 )
 
 type Service struct {
-	User UserService
+	User   UserService
+	Record RecordService
 }
 
 type Handler struct {
@@ -45,15 +45,18 @@ func NewHandler(service Service) *Handler {
 }
 
 func (h *Handler) mapRoutes() {
-	h.Router.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello World")
-	})
-
+	// User
 	h.Router.HandleFunc("/api/v1/user", h.PostUser).Methods("POST")
 	h.Router.HandleFunc("/api/v1/user/{id}", h.GetUser).Methods("GET")
 	h.Router.HandleFunc("/api/v1/user/{id}", h.UpdateUser).Methods("UPDATE")
 	h.Router.HandleFunc("/api/v1/user/{id}", h.DeleteUser).Methods("DELETE")
 	h.Router.HandleFunc("/api/v1/user/authUser", h.AuthUser).Methods("POST")
+	// Record
+	h.Router.HandleFunc("/api/v1/record", h.PostRecord).Methods("POST")
+	h.Router.HandleFunc("/api/v1/record/author/{id}", h.GetRecordByAuthor).Methods("GET")
+	h.Router.HandleFunc("/api/v1/record/{id}", h.GetRecordById).Methods("GET")
+	h.Router.HandleFunc("/api/v1/record/{id}", h.UpdateRecord).Methods("UPDATE")
+	h.Router.HandleFunc("/api/v1/record", h.DeleteRecord).Methods("DELETE")
 }
 
 func (h *Handler) Serve() error {
