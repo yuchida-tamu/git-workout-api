@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/yuchida-tamu/git-workout-api/internal/db"
+	"github.com/yuchida-tamu/git-workout-api/internal/record"
 	transportHttp "github.com/yuchida-tamu/git-workout-api/internal/transport/http"
 	"github.com/yuchida-tamu/git-workout-api/internal/user"
 )
@@ -23,7 +24,11 @@ func Run() error {
 	}
 
 	userService := user.NewService(db)
-	service := transportHttp.Service{User: userService}
+	recordService := record.NewService(db)
+	service := transportHttp.Service{
+		User:   userService,
+		Record: recordService,
+	}
 
 	httpHandler := transportHttp.NewHandler(service)
 	if err := httpHandler.Serve(); err != nil {

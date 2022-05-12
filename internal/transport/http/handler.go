@@ -56,7 +56,7 @@ func (h *Handler) mapRoutes() {
 	h.Router.HandleFunc("/api/v1/record/author/{id}", h.GetRecordByAuthor).Methods("GET")
 	h.Router.HandleFunc("/api/v1/record/{id}", h.GetRecordById).Methods("GET")
 	h.Router.HandleFunc("/api/v1/record/{id}", h.UpdateRecord).Methods("UPDATE")
-	h.Router.HandleFunc("/api/v1/record", h.DeleteRecord).Methods("DELETE")
+	h.Router.HandleFunc("/api/v1/record/{id}", h.DeleteRecord).Methods("DELETE")
 }
 
 func (h *Handler) Serve() error {

@@ -28,7 +28,7 @@ func convertPostRecordRequestToRecord(r PostRecordRequest) record.Record {
 }
 
 type RecordService interface {
-	GetRecordByAuthor(context.Context, string) ([]record.Record, error)
+	GetRecordsByAuthor(context.Context, string) ([]record.Record, error)
 	GetRecordById(context.Context, string) (record.Record, error)
 	PostRecord(context.Context, record.Record) (record.Record, error)
 	UpdateRecord(ctx context.Context, ID string, rcd record.Record) (record.Record, error)
@@ -67,7 +67,7 @@ func (h *Handler) GetRecordByAuthor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	records, err := h.Service.Record.GetRecordByAuthor(r.Context(), id)
+	records, err := h.Service.Record.GetRecordsByAuthor(r.Context(), id)
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)

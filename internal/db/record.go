@@ -85,7 +85,7 @@ func (d *Database) PostRecord(ctx context.Context, rcd record.Record) (record.Re
 	row, err := d.Client.NamedQueryContext(
 		ctx,
 		`INSERT INTO records
-		(id, date_created, message_body. author)
+		(id, date_created, message_body, author)
 		VALUES
 		(:id, :datecreated, :messagebody, :author)`,
 		postRow,
