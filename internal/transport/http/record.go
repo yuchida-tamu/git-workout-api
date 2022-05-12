@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -12,14 +13,15 @@ import (
 )
 
 type PostRecordRequest struct {
-	DateCreated string `json:"date_created" validate:"required"`
 	MessageBody string `json:"message_body" validate:"required"`
 	Author      string `json:"author" validate:"required"`
 }
 
 func convertPostRecordRequestToRecord(r PostRecordRequest) record.Record {
+	// get current time
+	date := time.Now().Format("2006-01-02")
 	return record.Record{
-		DateCreated: r.DateCreated,
+		DateCreated: date,
 		MessageBody: r.MessageBody,
 		Author:      r.Author,
 	}
