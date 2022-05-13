@@ -33,34 +33,34 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// func JWTAuth(
-// 	original func(w http.ResponseWriter, r *http.Request),
-// ) func(w http.ResponseWriter, r *http.Request) {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		authHeader := r.Header["Authorization"]
-// 		if authHeader == nil {
-// 			http.Error(w, "not authorized", http.StatusUnauthorized)
-// 			return
-// 		}
+func JWTAuth(
+	original func(w http.ResponseWriter, r *http.Request),
+) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header["Authorization"]
+		if authHeader == nil {
+			http.Error(w, "not authorized", http.StatusUnauthorized)
+			return
+		}
 
-// 		// Bearer: token-string, (in the Header, Request should have "Authorization", which is formatted as "bearer [encoded jwt key]")
-// 		authHeaderParts := strings.Split(authHeader[0], " ")
-// 		if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
-// 			http.Error(w, "not authorized", http.StatusUnauthorized)
-// 			return
-// 		}
+		// Bearer: token-string, (in the Header, Request should have "Authorization", which is formatted as "bearer [encoded jwt key]")
+		authHeaderParts := strings.Split(authHeader[0], " ")
+		if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
+			http.Error(w, "not authorized", http.StatusUnauthorized)
+			return
+		}
 
-// 		if validateToken(authHeaderParts[1]) {
-// 			original(w, r)
-// 		} else {
-// 			http.Error(w, "not authorized", http.StatusUnauthorized)
-// 			return
-// 		}
-// 	}
-// }
+		if validateToken(authHeaderParts[1]) {
+			original(w, r)
+		} else {
+			http.Error(w, "not authorized", http.StatusUnauthorized)
+			return
+		}
+	}
+}
 
 func validateToken(accessToken string) bool {
-	var mySigningKey = []byte(os.Getenv("JWT_KEY"))
+	var mySigningKey = []byte(os.Getenv("SIGNING_SECRET"))
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("could not validate auth token")

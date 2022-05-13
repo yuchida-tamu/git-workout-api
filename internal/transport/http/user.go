@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/yuchida-tamu/git-workout-api/internal/user"
@@ -27,8 +30,8 @@ type UserForClient struct {
 }
 
 type AuthUserResponse struct {
-	IsAuthed bool
-	Data     UserForClient
+	Token  string `json:"token"`
+	UserID string `json:"user_id`
 }
 
 type UserService interface {
@@ -181,8 +184,8 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		response := AuthUserResponse{
-			IsAuthed: false,
-			Data:     UserForClient{},
+			Token:  "",
+			UserID: "",
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -191,14 +194,33 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	UserForClient := UserForClient{
-		ID:       user.ID,
-		Username: user.Username,
+	// create token
+	token := jwt.New(jwt.SigningMethodHS256)
+	// Set claims
+	// This is the information which frontend can use
+	// The backend can also decode the token and get admin etc.
+	claims := token.Claims.(jwt.MapClaims)
+	claims["username"] = user.Username
+	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+
+	// Generate encoded token and send it as response.
+	// The signing string should be secret (a generated UUID          works too)
+	t, err := token.SignedString([]byte(os.Getenv("SIGNING_SECRET")))
+	if err != nil {
+		response := AuthUserResponse{
+			Token:  "",
+			UserID: "",
+		}
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			panic(err)
+		}
+		return
 	}
 
 	response := AuthUserResponse{
-		IsAuthed: true,
-		Data:     UserForClient,
+		Token:  t,
+		UserID: user.ID,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
