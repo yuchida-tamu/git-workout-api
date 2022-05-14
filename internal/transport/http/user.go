@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -30,8 +31,9 @@ type UserForClient struct {
 }
 
 type AuthUserResponse struct {
-	Token  string `json:"token"`
-	UserID string `json:"user_id`
+	Token        string `json:"accesss_token"`
+	RefreshToken string `json:"refresh_token"`
+	UserID       string `json:"user_id"`
 }
 
 type UserService interface {
@@ -194,22 +196,13 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create token
-	token := jwt.New(jwt.SigningMethodHS256)
-	// Set claims
-	// This is the information which frontend can use
-	// The backend can also decode the token and get admin etc.
-	claims := token.Claims.(jwt.MapClaims)
-	claims["username"] = user.Username
-	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+	tokenPair, err := generateTokenPair(authData.Username)
 
-	// Generate encoded token and send it as response.
-	// The signing string should be secret (a generated UUID          works too)
-	t, err := token.SignedString([]byte(os.Getenv("SIGNING_SECRET")))
 	if err != nil {
 		response := AuthUserResponse{
-			Token:  "",
-			UserID: "",
+			Token:        "",
+			RefreshToken: "",
+			UserID:       "",
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -219,12 +212,97 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := AuthUserResponse{
-		Token:  t,
-		UserID: user.ID,
+		Token:        tokenPair["access_token"],
+		RefreshToken: tokenPair["refresh_token"],
+		UserID:       user.ID,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		panic(err)
 	}
 
+}
+
+type tokenReqBody struct {
+	RefreshToken string `json:"refresh_token"`
+	UserID       string `json:"user_id"`
+}
+
+// RefreshToken - a handler to refresh token for client
+func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var tokenReq tokenReqBody
+	if err := json.NewDecoder(r.Body).Decode(&tokenReq); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	token, err := jwt.Parse(tokenReq.RefreshToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return "", fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("SIGNING_SECRET")), nil
+	})
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	_, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	newTokenPair, err := generateTokenPair(tokenReq.UserID)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	response := AuthUserResponse{
+		Token:        newTokenPair["access_token"],
+		RefreshToken: newTokenPair["refresh_token"],
+		UserID:       tokenReq.UserID,
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		panic(err)
+	}
+
+}
+
+func generateTokenPair(username string) (map[string]string, error) {
+	// Create token
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	// Set claims
+	// This is the information which frontend can use
+	// The backend can also decode the token and get admin etc.
+	claims := token.Claims.(jwt.MapClaims)
+	claims["sub"] = 1
+	claims["username"] = username
+	claims["exp"] = time.Now().Add(time.Second * 15).Unix()
+
+	// Generate encoded token and send it as response.
+	// The signing string should be secret (a generated UUID works too)
+	t, err := token.SignedString([]byte(os.Getenv("SIGNING_SECRET")))
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken := jwt.New(jwt.SigningMethodHS256)
+	rtClaims := refreshToken.Claims.(jwt.MapClaims)
+	rtClaims["sub"] = 1
+	rtClaims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+
+	rt, err := refreshToken.SignedString([]byte(os.Getenv("SIGNING_SECRETE")))
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		"access_token":  t,
+		"refresh_token": rt,
+	}, nil
 }

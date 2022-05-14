@@ -16,7 +16,8 @@
 
 - [x] API: getAllRecords
 - [x] API: getRecordById
-- [ ] validation: validate author is valid ID
+- [x] validation: validate author is valid ID
+- [ ] jwt
 
 ### Deploy
 

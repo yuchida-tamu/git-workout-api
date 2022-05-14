@@ -43,12 +43,14 @@ func NewHandler(service Service) *Handler {
 }
 
 func (h *Handler) mapRoutes() {
+	// Auth
+	h.Router.HandleFunc("/api/v1/auth/auth", h.AuthUser).Methods("POST")
+	h.Router.HandleFunc("/api/v1/auth/refresh", h.RefreshToken).Methods("POST")
 	// User
 	h.Router.HandleFunc("/api/v1/user", JWTAuth(h.PostUser)).Methods("POST")
 	h.Router.HandleFunc("/api/v1/user/{id}", JWTAuth(h.GetUser)).Methods("GET")
 	h.Router.HandleFunc("/api/v1/user/{id}", JWTAuth(h.UpdateUser)).Methods("UPDATE")
 	h.Router.HandleFunc("/api/v1/user/{id}", JWTAuth(h.DeleteUser)).Methods("DELETE")
-	h.Router.HandleFunc("/api/v1/user/authUser", h.AuthUser).Methods("POST")
 	// Record
 	h.Router.HandleFunc("/api/v1/record", JWTAuth(h.PostRecord)).Methods("POST")
 	h.Router.HandleFunc("/api/v1/record/author/{id}", JWTAuth(h.GetRecordByAuthor)).Methods("GET")
