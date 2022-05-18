@@ -196,7 +196,7 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenPair, err := generateTokenPair(authData.Username)
+	tokenPair, err := generateTokenPair(authData.Username, user.ID)
 
 	if err != nil {
 		response := AuthUserResponse{
@@ -226,6 +226,7 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 type tokenReqBody struct {
 	RefreshToken string `json:"refresh_token"`
 	UserID       string `json:"user_id"`
+	Username     string `json:"username"`
 }
 
 // RefreshToken - a handler to refresh token for client
@@ -254,7 +255,7 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newTokenPair, err := generateTokenPair(tokenReq.UserID)
+	newTokenPair, err := generateTokenPair(tokenReq.Username, tokenReq.UserID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -272,7 +273,7 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func generateTokenPair(username string) (map[string]string, error) {
+func generateTokenPair(username string, id string) (map[string]string, error) {
 	// Create token
 	token := jwt.New(jwt.SigningMethodHS256)
 
@@ -282,6 +283,7 @@ func generateTokenPair(username string) (map[string]string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["sub"] = 1
 	claims["username"] = username
+	claims["userId"] = id
 	claims["exp"] = time.Now().Add(time.Second * 15).Unix()
 
 	// Generate encoded token and send it as response.
