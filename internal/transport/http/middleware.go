@@ -48,7 +48,7 @@ func AddCurrentUserToContextMiddleware(next http.Handler) http.Handler {
 		// retrieve user Id from jwt
 		t := RetrieveJWTTokenFromHeader(r)
 		if t == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			next.ServeHTTP(w, r)
 			return
 		}
 
@@ -60,7 +60,7 @@ func AddCurrentUserToContextMiddleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			next.ServeHTTP(w, r)
 			return
 		}
 
@@ -77,7 +77,7 @@ func AddCurrentUserToContextMiddleware(next http.Handler) http.Handler {
 		}
 
 		// add user id to the current context
-		ctx := context.WithValue(r.Context(), "userId", userIdInToken)
+		ctx := context.WithValue(r.Context(), "user_id", userIdInToken)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -136,7 +136,7 @@ func (d *Database) UpdateUser(ctx context.Context, uuid string, user appUser.Use
 		ctx,
 		`UPDATE users SET
 		username = :username,
-		password = : password
+		password = :password
 		WHERE id = :id`,
 		userRow,
 	)

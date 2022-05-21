@@ -69,24 +69,23 @@ func JWTAuth(
 				ErrorCode: -2000,
 			})
 			if err != nil {
-				http.Error(w, "not authorized", http.StatusUnauthorized)
+				http.Error(w, "something went wrong", http.StatusUnauthorized)
 				return
 			}
 		}
 		if !valid {
-			http.Error(w, "not authorized", http.StatusUnauthorized)
+			http.Error(w, "not authorized invalid token", http.StatusUnauthorized)
 			return
 		}
 
 		original(w, r)
-		return
 
 	}
 }
 
 func validateToken(accessToken string) (valid bool, expired bool) {
 	var mySigningKey = []byte(os.Getenv("SIGNING_SECRET"))
-	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+	t, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("could not validate auth token")
 		}
@@ -94,7 +93,11 @@ func validateToken(accessToken string) (valid bool, expired bool) {
 		return mySigningKey, nil
 	})
 
-	v, _ := err.(*jwt.ValidationError)
+	v, ok := err.(*jwt.ValidationError)
+
+	if !ok {
+		return t.Valid, false
+	}
 
 	if v.Errors == jwt.ValidationErrorExpired {
 		return false, true
@@ -104,5 +107,5 @@ func validateToken(accessToken string) (valid bool, expired bool) {
 		return false, false
 	}
 
-	return token.Valid, false
+	return t.Valid, false
 }

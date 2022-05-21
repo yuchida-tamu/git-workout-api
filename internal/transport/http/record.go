@@ -67,6 +67,12 @@ func (h *Handler) GetRecordByAuthor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate userId and currentId in the context match
+	if hasAccess := checkUserHasAccess(r.Context(), id); !hasAccess {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	records, err := h.Service.Record.GetRecordsByAuthor(r.Context(), id)
 	if err != nil {
 		log.Print(err)
@@ -107,6 +113,12 @@ func (h *Handler) UpdateRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate userId and currentId in the context match
+	if hasAccess := checkUserHasAccess(r.Context(), id); !hasAccess {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	var record record.Record
 	if err := json.NewDecoder(r.Body).Decode(&record); err != nil {
 		return
@@ -135,6 +147,12 @@ func (h *Handler) DeleteRecord(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// validate userId and currentId in the context match
+	if hasAccess := checkUserHasAccess(r.Context(), id); !hasAccess {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

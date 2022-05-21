@@ -123,6 +123,12 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate userId and currentId in the context match
+	if hasAccess := checkUserHasAccess(r.Context(), id); !hasAccess {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	validate := validator.New()
 	err := validate.Struct(user)
 	if err != nil {
@@ -151,6 +157,12 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// validate userId and currentId in the context match
+	if hasAccess := checkUserHasAccess(r.Context(), id); !hasAccess {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -284,7 +296,7 @@ func generateTokenPair(username string, id string) (map[string]string, error) {
 	claims["sub"] = 1
 	claims["username"] = username
 	claims["userId"] = id
-	claims["exp"] = time.Now().Add(time.Second * 15).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 60).Unix()
 
 	// Generate encoded token and send it as response.
 	// The signing string should be secret (a generated UUID works too)
@@ -307,4 +319,9 @@ func generateTokenPair(username string, id string) (map[string]string, error) {
 		"access_token":  t,
 		"refresh_token": rt,
 	}, nil
+}
+
+func checkUserHasAccess(ctx context.Context, id string) bool {
+	currentUserId, ok := ctx.Value("user_id").(string)
+	return ok && currentUserId == id
 }
